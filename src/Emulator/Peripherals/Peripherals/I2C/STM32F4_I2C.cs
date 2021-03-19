@@ -227,7 +227,7 @@ namespace Antmicro.Renode.Peripherals.I2C
                     dataRegisterEmpty.Value = true;
                     Update();
                     writeLock = false;
-                    machine.LocalTimeSource.ExecuteInNearestSyncedState(_ =>
+                    machine.LocalTimeSource.ExecuteInNearestSyncedState(__ =>
                     {
                         if(!writeLock)
                         {
