@@ -187,7 +187,8 @@
     <Compile Include="Peripherals\Timers\CC2538Watchdog.cs" />
     <Compile Include="Peripherals\USBDeprecated\USBDeviceSpeed.cs" />
     <Compile Include="Peripherals\GPIOPort\EFMGPIOPort.cs" />
-    <Compile Include="Peripherals\GPIOPort\STM32F4GPIOPort.cs" />
+    <Compile Include="Peripherals\GPIOPort\STM32F4GPIOPort_old.cs" />
+    <Compile Include="Peripherals\GPIOPort\STM32_GPIOPort.cs" />
     <Compile Include="Peripherals\GPIOPort\STM32F1GPIOPort.cs" />
     <Compile Include="Peripherals\GPIOPort\VybridGPIOPort.cs" />
     <Compile Include="Peripherals\GPIOPort\XilinxGPIOPS.cs" />
@@ -320,6 +321,7 @@
     <Compile Include="Peripherals\SPI\MAX3421E.cs" />
     <Compile Include="Peripherals\GPIOPort\CC2538_GPIO.cs" />
     <Compile Include="Peripherals\Miscellaneous\LiteX_SoC_Controller.cs" />
+    <Compile Include="Peripherals\Miscellaneous\LiteX_SoC_Controller_CSR32.cs" />
     <Compile Include="Peripherals\SPI\EOSS3_SPIMaster.cs" />
     <Compile Include="Peripherals\Miscellaneous\LiteX_MMCM.cs" />
     <Compile Include="Peripherals\Analog\EOSS3_ADC.cs" />
@@ -329,6 +331,7 @@
     <Compile Include="Peripherals\DMA\EOSS3_SystemDMABridge.cs" />
     <Compile Include="Peripherals\Sensors\ADXL345.cs" />
     <Compile Include="Peripherals\SD\LiteSDCard.cs" />
+    <Compile Include="Peripherals\SD\LiteSDCard_CSR32.cs" />
     <Compile Include="Peripherals\Sensors\PAC1934.cs" />
     <Compile Include="Peripherals\Sound\LiteX_I2S.cs" />
     <Compile Include="Peripherals\Sound\LiteX_I2S_Master.cs" />
@@ -382,6 +385,7 @@
     <Compile Include="Peripherals\Timers\LiteX_Timer_CSR32.cs" />
     <Compile Include="Peripherals\Miscellaneous\OpenTitan_VerilatorSwTestStatus.cs" />
     <Compile Include="Peripherals\Miscellaneous\OpenTitan_PowerManager.cs" />
+    <Compile Include="Peripherals\GPIOPort\IMXRT_GPIO.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>
