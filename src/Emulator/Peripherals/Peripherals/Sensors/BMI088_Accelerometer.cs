@@ -1,4 +1,5 @@
 //
+// Copyright (c) 2021 Bitcraze
 // Copyright (c) 2010-2020 Antmicro
 //
 // This file is licensed under the MIT License.
