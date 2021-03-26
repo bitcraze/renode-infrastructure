@@ -43,6 +43,12 @@
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Peripherals\Sensors\BMP388.cs" />
+    <Compile Include="Peripherals\Sensors\BMI088_Accelerometer.cs" />
+    <Compile Include="Peripherals\Sensors\BMI088_Gyroscope.cs" />
+    <Compile Include="Peripherals\Timers\STM32_Basic_Timer.cs" />
+    <Compile Include="Peripherals\Miscellaneous\CF_Syslink.cs" />
+    <Compile Include="Peripherals\Miscellaneous\EEPROM_24AA64.cs" />
     <Compile Include="Peripherals\Timers\EFR32_RTCC.cs" />
     <Compile Include="Peripherals\Timers\EFR32_Timer.cs" />
     <Compile Include="Peripherals\Timers\LiteX_CPUTimer.cs" />

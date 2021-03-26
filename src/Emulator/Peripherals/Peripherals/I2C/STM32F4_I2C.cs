@@ -97,8 +97,11 @@ namespace Antmicro.Renode.Peripherals.I2C
 
         private void CreateRegisters()
         {
-            var control1 = new DoubleWordRegister(this).WithFlag(15, writeCallback: SoftwareResetWrite, name:"SWRST").WithFlag(9, FieldMode.Read, name:"StopGen", writeCallback: StopWrite)
-                .WithFlag(8, FieldMode.Read, writeCallback: StartWrite, name:"StartGen").WithFlag(0, writeCallback: PeripheralEnableWrite, name:"PeriEn");
+            var control1 = new DoubleWordRegister(this)
+                .WithFlag(15, writeCallback: SoftwareResetWrite, name:"SWRST")
+                .WithFlag(9, FieldMode.Read, name:"StopGen", writeCallback: StopWrite)
+                .WithFlag(8, FieldMode.Read, writeCallback: StartWrite, name:"StartGen")
+                .WithFlag(0, writeCallback: PeripheralEnableWrite, name:"PeriEn");
             var control2 = new DoubleWordRegister(this).WithValueField(0, 6, name:"Freq");
             var status1 = new DoubleWordRegister(this);
             var status2 = new DoubleWordRegister(this);
@@ -158,6 +161,7 @@ namespace Antmicro.Renode.Peripherals.I2C
             var result = 0u;
             if(dataToReceive != null && dataToReceive.Any())
             {
+                this.Log(LogLevel.Noisy, "Managed to read 0x{0:X} from non-empty fifo", dataToReceive.Peek());
                 result = dataToReceive.Dequeue();
             }
             else
@@ -174,9 +178,10 @@ namespace Antmicro.Renode.Peripherals.I2C
         private void DataWrite(uint oldValue, uint newValue)
         {
             //moved from WriteByte
+            writeLock = true;
             byteTransferFinished.Value = false;
             Update();
-
+            this.Log(LogLevel.Noisy, "Entered DataWrite with oldValue 0x{0:X} and newValue 0x{1:X}. State: {2}", oldValue, newValue, state);
             switch(state)
             {
             case State.AwaitingAddress:
@@ -192,11 +197,13 @@ namespace Antmicro.Renode.Peripherals.I2C
 
                     if(willReadOnSelectedSlave)
                     {
+                        this.Log(LogLevel.Noisy, "Data will be read from slave {0} at address 0x{1:X}", selectedSlave, address);
                         dataToReceive = new Queue<byte>(selectedSlave.Read());
                         byteTransferFinished.Value = true;
                     }
                     else
                     {
+                        this.Log(LogLevel.Noisy, "Data will be written to slave {0} at address 0x{1:X}", selectedSlave, address);
                         state = State.AwaitingData;
                         dataToTransfer = new List<byte>();
 
@@ -206,6 +213,7 @@ namespace Antmicro.Renode.Peripherals.I2C
                 }
                 else
                 {
+                    this.Log(LogLevel.Warning, "No slave device on address 0x{0:X}", address);
                     state = State.Idle;
                     acknowledgeFailed.Value = true;
                 }
@@ -217,8 +225,19 @@ namespace Antmicro.Renode.Peripherals.I2C
                 machine.LocalTimeSource.ExecuteInNearestSyncedState(_ =>
                 {
                     dataRegisterEmpty.Value = true;
-                    byteTransferFinished.Value = true;
                     Update();
+                    writeLock = false;
+                    machine.LocalTimeSource.ExecuteInNearestSyncedState(__ =>
+                    {
+                        if(!writeLock)
+                        {
+                            this.Log(LogLevel.Noisy, "Setting BTF to true!");
+                            // Moved setting BTF to inside another "Synced State" since it got set too soon otherwise
+                            // Firmware, hardware or emulation problem?
+                            byteTransferFinished.Value = true;
+                            Update();
+                        }
+                    });
                 });
                 break;
             default:
@@ -245,6 +264,7 @@ namespace Antmicro.Renode.Peripherals.I2C
 
             if(selectedSlave != null && dataToTransfer != null && dataToTransfer.Count > 0)
             {
+                this.NoisyLog("In StopWrite, dataToTransfer has {0} elements", dataToTransfer.Count);
                 selectedSlave.Write(dataToTransfer.ToArray());
                 dataToTransfer.Clear();
                 state = State.Idle;
@@ -254,6 +274,7 @@ namespace Antmicro.Renode.Peripherals.I2C
             state = State.Idle;
             byteTransferFinished.Value = false;
             dataRegisterEmpty.Value = false;
+            dataToReceive.Clear();
             Update();
         }
 
@@ -268,6 +289,7 @@ namespace Antmicro.Renode.Peripherals.I2C
             if(selectedSlave != null && dataToTransfer != null && dataToTransfer.Count > 0)
             {
                 // repeated start condition
+                this.NoisyLog("Repeated start condition. In StartWrite, dataToTransfer has {0} elements", dataToTransfer.Count);
                 selectedSlave.Write(dataToTransfer.ToArray());
                 dataToTransfer.Clear();
             }
@@ -318,6 +340,7 @@ namespace Antmicro.Renode.Peripherals.I2C
         private Queue<byte> dataToReceive;
         private bool willReadOnSelectedSlave;
         private II2CPeripheral selectedSlave;
+        private bool writeLock;
 
         private enum Registers
         {
