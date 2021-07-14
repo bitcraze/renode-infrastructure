@@ -86,7 +86,7 @@ namespace Antmicro.Renode.Peripherals.Sensors
 
         public byte[] Read(int count)
         {
-            if(registerAddress==Registers.RateXLSB)
+            if((registerAddress==Registers.RateXLSB) && (fifo.SamplesCount>0))
             {
                 fifo.TryDequeueNewSample();
             }
