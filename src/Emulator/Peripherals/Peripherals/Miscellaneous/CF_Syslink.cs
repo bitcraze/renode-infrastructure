@@ -19,10 +19,23 @@ namespace Antmicro.Renode.Peripherals.Miscellaneous
     [AllowedTranslations(AllowedTranslation.WordToDoubleWord | AllowedTranslation.ByteToDoubleWord)]
     public class CF_Syslink : BasicDoubleWordPeripheral, IUART
     {
-        public CF_Syslink(Machine machine, uint frequency = 8000000) : base(machine)
+        public CF_Syslink(Machine machine, uint deck = 0, uint frequency = 8000000) : base(machine)
         {
             this.frequency = frequency;
             this.DataLength = UInt32.MaxValue - 6; // Packet lengths have data and 6 extra bytes
+            // Fakes 1-wire memory read from decks.
+            switch(deck) //TODO better way to do this?
+            {
+                case 1: // Flowdeck2
+                    this.deckCount = 1;
+                    this.deckData = CreateMessage(0x22, 14, new byte[]
+				    {0x01,0x00,0x00,0xEB,0x04,0x05,0x06,0x07,0xBC,0x0F,0x89,0x00,0x00,0xFF});
+                    break;
+                default: // No deck
+                    this.deckCount = 0;
+                    this.deckData = new byte[]{};
+                    break;
+            }
         }
 
         public void WriteChar(byte value)
@@ -50,10 +63,17 @@ namespace Antmicro.Renode.Peripherals.Miscellaneous
             switch(data[2])
             {
                 case 0x20: // SYSLINK_OW_SCAN
-                    byte[] OwScanData = CreateMessage(0x20, 0x01, new byte[]{0x00});
+                    byte[] OwScanData = CreateMessage(0x20, 0x01, new byte[]{deckCount});
                     for(int i = 0; i < OwScanData.Length; ++i)
                     {
                         CharReceived?.Invoke((byte)OwScanData[i]);
+                    }
+                    receiveFifo.Clear();
+                    break;
+                case 0x22: // OW_READ
+                    for(int i = 0; i < deckData.Length; ++i)
+                    {
+                        CharReceived?.Invoke((byte)deckData[i]);
                     }
                     receiveFifo.Clear();
                     break;
@@ -106,6 +126,8 @@ namespace Antmicro.Renode.Peripherals.Miscellaneous
         private void Update(){}
 
         private readonly uint frequency;
+        private readonly byte deckCount;
+        private readonly byte[] deckData;
         private readonly Queue<byte> receiveFifo = new Queue<byte>();
     }
 }
